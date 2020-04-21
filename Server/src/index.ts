@@ -3,7 +3,7 @@ import { Server } from 'colyseus';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
-import { BattleRoyaleWaitRoom, DemoRoom, PartyLobbyRoom } from './rooms';
+import * as rooms from './rooms';
 
 const port = Number(process.env.PORT || 2567);
 const app = express()
@@ -14,9 +14,9 @@ app.use(express.json())
 const server = http.createServer(app);
 const gameServer = new Server({ server });
 
-gameServer.define('demo', DemoRoom);
-gameServer.define('battle_royale_wait_room', BattleRoyaleWaitRoom);
-gameServer.define('party_lobby_room', PartyLobbyRoom);
+Object.values(rooms).forEach(room => {
+  gameServer.define(room.roomName, room);
+});
 
 // register colyseus monitor AFTER registering your room handlers
 app.use('/colyseus', monitor());

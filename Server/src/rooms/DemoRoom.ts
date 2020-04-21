@@ -1,4 +1,3 @@
-// tslint:disable: max-classes-per-file
 // tslint:disable: no-console
 
 import { Room, Client, generateId } from 'colyseus';
@@ -36,6 +35,8 @@ class Message extends Schema {
 }
 
 export class DemoRoom extends Room<State> {
+  static readonly roomName = 'demo';
+
   static ENEMY_SPEED = 1;
 
   onCreate(options: any) {
@@ -46,7 +47,7 @@ export class DemoRoom extends Room<State> {
 
     this.setMetadata({
       str: 'hello',
-      number: 10
+      number: 10,
     });
 
     this.setPatchRate(1000 / 20);
@@ -89,7 +90,7 @@ export class DemoRoom extends Room<State> {
     console.log(data, 'received from', client.sessionId);
 
     if (data === 'move_right') {
-      this.state.entities[client.sessionId].x += 0.01;
+      this.state.entities[client.sessionId].x += 0.1;
 
       const message = new Message();
       message.num = Math.floor(Math.random() * 100);
