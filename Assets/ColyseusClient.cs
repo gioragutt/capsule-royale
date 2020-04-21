@@ -267,12 +267,11 @@ public class ColyseusClient : MonoBehaviour {
 
 	void OnEntityMove(Entity entity, string key)
 	{
-		GameObject cube;
-		entities.TryGetValue (entity, out cube);
-
-		Debug.Log(entity);
-
-		cube.transform.Translate (new Vector3 (entity.x, entity.y, 0));
+		if (entities.TryGetValue(entity, out GameObject cube) && cube != null)
+		{
+			Debug.Log(entity);
+			cube.transform.position = new Vector3(entity.x, entity.y, 0);
+		}
 	}
 
 	void OnApplicationQuit()
