@@ -49,9 +49,9 @@ public class ColyseusClient : MonoBehaviour {
 	public string roomName = "demo";
 
 	protected Client client;
-	protected Room<State> room;
+	protected Room<CapsuleRoyale.Demo.State> room;
 
-	protected IndexedDictionary<Entity, GameObject> entities = new IndexedDictionary<Entity, GameObject>();
+	protected IndexedDictionary<CapsuleRoyale.Demo.Entity, GameObject> entities = new IndexedDictionary<CapsuleRoyale.Demo.Entity, GameObject>();
 
 	// Use this for initialization
 	void Start () {
@@ -92,7 +92,7 @@ public class ColyseusClient : MonoBehaviour {
 
 	public async void CreateRoom()
 	{
-		room = await client.Create<State>(roomName, new Dictionary<string, object>() { });
+		room = await client.Create<CapsuleRoyale.Demo.State>(roomName, new Dictionary<string, object>() { });
 
 		m_SessionIdText.text = "sessionId: " + room.SessionId;
 
@@ -112,7 +112,7 @@ public class ColyseusClient : MonoBehaviour {
 
 	public async void JoinOrCreateRoom()
 	{
-		room = await client.JoinOrCreate<State>(roomName, new Dictionary<string, object>() { });
+		room = await client.JoinOrCreate<CapsuleRoyale.Demo.State>(roomName, new Dictionary<string, object>() { });
 
 		m_SessionIdText.text = "sessionId: " + room.SessionId;
 
@@ -132,7 +132,7 @@ public class ColyseusClient : MonoBehaviour {
 
 	public async void JoinRoom ()
 	{
-		room = await client.Join<State>(roomName, new Dictionary<string, object>() {});
+		room = await client.Join<CapsuleRoyale.Demo.State>(roomName, new Dictionary<string, object>() {});
 
 		m_SessionIdText.text = "sessionId: " + room.SessionId;
 
@@ -160,7 +160,7 @@ public class ColyseusClient : MonoBehaviour {
 			return;
 		}
 
-		room = await client.Reconnect<State>(roomId, sessionId);
+		room = await client.Reconnect<CapsuleRoyale.Demo.State>(roomId, sessionId);
 		Debug.Log("Reconnected into room successfully.");
 		m_SessionIdText.text = "sessionId: " + room.SessionId;
 
@@ -179,7 +179,7 @@ public class ColyseusClient : MonoBehaviour {
 		await room.Leave(false);
 
 		// Destroy player entities
-		foreach (KeyValuePair<Entity, GameObject> entry in entities)
+		foreach (KeyValuePair<CapsuleRoyale.Demo.Entity, GameObject> entry in entities)
 		{
 			Destroy(entry.Value);
 		}
@@ -222,9 +222,9 @@ public class ColyseusClient : MonoBehaviour {
 
 	void OnMessage (object msg)
 	{
-		if (msg is Message)
+		if (msg is CapsuleRoyale.Demo.Message)
 		{
-			var message = (Message)msg;
+			var message = (CapsuleRoyale.Demo.Message)msg;
 			Debug.Log("Received schema-encoded message:");
 			Debug.Log("message.num => " + message.num + ", message.str => " + message.str);
 		}
@@ -237,13 +237,13 @@ public class ColyseusClient : MonoBehaviour {
 		}
 	}
 
-	void OnStateChangeHandler (State state, bool isFirstState)
+	void OnStateChangeHandler (CapsuleRoyale.Demo.State state, bool isFirstState)
 	{
 		// Setup room first state
 		Debug.Log("State has been updated!");
 	}
 
-	void OnEntityAdd(Entity entity, string key)
+	void OnEntityAdd(CapsuleRoyale.Demo.Entity entity, string key)
 	{
 		GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
@@ -255,7 +255,7 @@ public class ColyseusClient : MonoBehaviour {
 		entities.Add(entity, cube);
 	}
 
-	void OnEntityRemove(Entity entity, string key)
+	void OnEntityRemove(CapsuleRoyale.Demo.Entity entity, string key)
 	{
 		GameObject cube;
 		entities.TryGetValue(entity, out cube);
@@ -265,7 +265,7 @@ public class ColyseusClient : MonoBehaviour {
 	}
 
 
-	void OnEntityMove(Entity entity, string key)
+	void OnEntityMove(CapsuleRoyale.Demo.Entity entity, string key)
 	{
 		if (entities.TryGetValue(entity, out GameObject cube) && cube != null)
 		{

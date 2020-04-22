@@ -1,19 +1,21 @@
-import { MapSchema, Schema, type } from '@colyseus/schema';
+import { MapSchema, Schema, type, Context } from '@colyseus/schema';
 import { Client, Room } from 'colyseus';
 
+const context = new Context();
+
 class SquadMember extends Schema {
-  @type('boolean')
+  @type('boolean', context)
   ready!: boolean;
 
-  @type('string')
+  @type('string', context)
   name!: string;
 }
 
 class SquadArrangementState extends Schema {
-  @type({ map: SquadMember })
+  @type({ map: SquadMember }, context)
   members = new MapSchema<SquadMember>();
 
-  @type('string')
+  @type('string', context)
   owner!: string;
 }
 

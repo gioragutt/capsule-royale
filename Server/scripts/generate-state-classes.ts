@@ -15,7 +15,7 @@ const generationTasks = fs.readdirSync(roomsDir)
   .map(({ filePath, roomName }) => ({
     title: `Generate ${roomName}`,
     task: async () => {
-      const namespace = `CapsuleRoyale.${roomName}.Schema`;
+      const namespace = `CapsuleRoyale.${roomName}`;
       const output = path.join(outputDir, roomName)
       await execa('npx', ['schema-codegen', filePath, '--csharp', '--output', output, '--namespace', namespace])
     },
