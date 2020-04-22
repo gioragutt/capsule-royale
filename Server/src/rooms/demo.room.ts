@@ -1,28 +1,30 @@
 // tslint:disable: no-console
 
-import { Room, Client, generateId } from 'colyseus';
-import { Schema, type, MapSchema } from '@colyseus/schema';
+import { Context, MapSchema, Schema, type } from '@colyseus/schema';
+import { Client, generateId, Room } from 'colyseus';
+
+const ctx = new Context();
 
 class Entity extends Schema {
-  @type('number')
+  @type('number', ctx)
   x: number = 0;
 
-  @type('number')
+  @type('number', ctx)
   y: number = 0;
 }
 
 class Player extends Entity {
-  @type('boolean')
+  @type('boolean', ctx)
   connected: boolean = true;
 }
 
 class Enemy extends Entity {
-  @type('number')
+  @type('number', ctx)
   power: number = Math.random() * 10;
 }
 
 class State extends Schema {
-  @type({ map: Entity })
+  @type({ map: Entity }, ctx)
   entities = new MapSchema<Entity>();
 }
 
@@ -30,8 +32,8 @@ class State extends Schema {
  * Demonstrate sending schema data types as messages
  */
 class Message extends Schema {
-  @type('number') num!: number;
-  @type('string') str!: string;
+  @type('number', ctx) num!: number;
+  @type('string', ctx) str!: string;
 }
 
 export class DemoRoom extends Room<State> {
@@ -52,6 +54,27 @@ export class DemoRoom extends Room<State> {
 
     this.setPatchRate(1000 / 20);
     this.setSimulationInterval((dt) => this.update(dt));
+
+    this.onMessage(0, (client, message) => {
+      client.send(0, message);
+    });
+
+    this.onMessage('schema', (client) => {
+      const message = new Message();
+      message.num = Math.floor(Math.random() * 100);
+      message.str = 'sending to a single client';
+      client.send(message);
+    })
+
+    this.onMessage('move_right', (client) => {
+      this.state.entities[client.sessionId].x += 0.01;
+
+      this.broadcast('hello', { hello: 'hello world' });
+    });
+
+    this.onMessage('*', (client: Client, msgType: string | number, message) => {
+      console.log(`received message "${msgType}" from ${client.sessionId}:`, message);
+    });
   }
 
   populateEnemies() {
@@ -66,6 +89,8 @@ export class DemoRoom extends Room<State> {
   onJoin(client: Client, options: any) {
     console.log('client joined!', client.sessionId);
     this.state.entities[client.sessionId] = new Player();
+
+    client.send('type', { hello: true });
   }
 
   async onLeave(client: Client, consented: boolean) {
@@ -84,22 +109,6 @@ export class DemoRoom extends Room<State> {
       console.log('disconnected!', client.sessionId);
       delete this.state.entities[client.sessionId];
     }
-  }
-
-  onMessage(client: Client, data: any) {
-    console.log(data, 'received from', client.sessionId);
-
-    if (data === 'move_right') {
-      this.state.entities[client.sessionId].x += 0.1;
-
-      const message = new Message();
-      message.num = Math.floor(Math.random() * 100);
-      message.str = 'sending to a single client';
-      this.send(client, message);
-    }
-    console.log(this.state.entities[client.sessionId].x);
-
-    this.broadcast({ hello: 'hello world' });
   }
 
   update(dt: number) {
