@@ -8,7 +8,8 @@ export function onJoin(this: Room) {
   console.log(this.sessionId, 'joined.');
 
   setTimeout(() => {
-    this.send('ready', true)
+    console.log('asdasdads', this.state.owner);
+    (this as any).send({ type: 'ready', ready: true });
   }, 5000);
 }
 
@@ -25,5 +26,5 @@ export function onError(this: Room, code, err) {
 }
 
 export function onStateChange(this: Room, state) {
-  // console.log(this.sessionId, "new state:", state);
+  console.log(this.sessionId, "new state:", state);
 }

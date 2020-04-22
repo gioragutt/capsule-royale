@@ -7,7 +7,7 @@
 
 using Colyseus.Schema;
 
-namespace CapsuleRoyale.SquadArrangement.Schemas {
+namespace CapsuleRoyale.SquadArrangement {
 	public class SquadMember : Schema {
 		[Type(0, "boolean")]
 		public bool ready = false;

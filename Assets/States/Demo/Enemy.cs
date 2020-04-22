@@ -7,7 +7,7 @@
 
 using Colyseus.Schema;
 
-namespace CapsuleRoyale.Demo.Schemas {
+namespace CapsuleRoyale.Demo {
 	public class Enemy : Entity {
 		[Type(2, "number")]
 		public float power = 0;

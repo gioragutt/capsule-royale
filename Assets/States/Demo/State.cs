@@ -7,7 +7,7 @@
 
 using Colyseus.Schema;
 
-namespace CapsuleRoyale.Demo.Schemas {
+namespace CapsuleRoyale.Demo {
 	public class State : Schema {
 		[Type(0, "map", typeof(MapSchema<Entity>))]
 		public MapSchema<Entity> entities = new MapSchema<Entity>();

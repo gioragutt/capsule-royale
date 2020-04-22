@@ -8,11 +8,6 @@ export class SquadMember extends Schema {
 
   @type('string', ctx)
   name!: string;
-
-  constructor(initial: Partial<SquadMember> = {}) {
-    super();
-    Object.assign(this, initial);
-  }
 }
 
 export class SquadArrangementState extends Schema {

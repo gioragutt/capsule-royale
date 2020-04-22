@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using NUnit.Framework;
 using System.Threading.Tasks;
-
+using CapsuleRoyale.Demo;
 
 public class RoomTest {
 	ClientComponent component;

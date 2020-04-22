@@ -4,277 +4,213 @@ using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 
-using System.Threading;
 using System.Threading.Tasks;
 
 using Colyseus;
-using Colyseus.Schema;
+using CapsuleRoyale.SquadArrangement;
 
 using GameDevWare.Serialization;
 
-[Serializable]
-class Metadata
+public class ColyseusClient : MonoBehaviour
 {
-	public string str;
-	public int number;
-}
 
-[Serializable]
-class CustomRoomAvailable : RoomAvailable
-{
-	public Metadata metadata;
-}
+    // UI Buttons are attached through Unity Inspector
+    public Button
+        m_ConnectButton,
+        m_CreateButton,
+        m_JoinOrCreateButton,
+        m_JoinButton,
+        m_ReconnectButton,
+        m_SendMessageButton,
+        m_LeaveButton,
+        m_GetAvailableRoomsButton;
+    public InputField m_EndpointField;
+    public Text m_IdText, m_SessionIdText;
 
-class CustomData
-{
-	public int integer;
-	public string str;
-}
+    public string roomName = "squad_arrangement";
 
-public class ColyseusClient : MonoBehaviour {
+    protected Client client;
+    protected Room<SquadArrangementState> room;
 
-	// UI Buttons are attached through Unity Inspector
-	public Button
-		m_ConnectButton,
-		m_CreateButton,
-		m_JoinOrCreateButton,
-		m_JoinButton,
-		m_ReconnectButton,
-		m_SendMessageButton,
-		m_LeaveButton,
-		m_GetAvailableRoomsButton;
-	public InputField m_EndpointField;
-	public Text m_IdText, m_SessionIdText;
+    protected IndexedDictionary<SquadMember, GameObject> members = new IndexedDictionary<SquadMember, GameObject>();
 
-	public string roomName = "demo";
+    // Use this for initialization
+    void Start()
+    {
+        /* Demo UI */
+        m_ConnectButton.onClick.AddListener(ConnectToServer);
 
-	protected Client client;
-	protected Room<State> room;
+        m_CreateButton.onClick.AddListener(CreateRoom);
+        m_JoinOrCreateButton.onClick.AddListener(JoinOrCreateRoom);
+        m_JoinButton.onClick.AddListener(JoinRoom);
+        m_ReconnectButton.onClick.AddListener(ReconnectRoom);
+        m_SendMessageButton.onClick.AddListener(SendMessage);
+        m_LeaveButton.onClick.AddListener(LeaveRoom);
+        m_GetAvailableRoomsButton.onClick.AddListener(GetAvailableRooms);
+    }
 
-	protected IndexedDictionary<Entity, GameObject> entities = new IndexedDictionary<Entity, GameObject>();
-
-	// Use this for initialization
-	void Start () {
-		/* Demo UI */
-		m_ConnectButton.onClick.AddListener(ConnectToServer);
-
-		m_CreateButton.onClick.AddListener(CreateRoom);
-		m_JoinOrCreateButton.onClick.AddListener(JoinOrCreateRoom);
-		m_JoinButton.onClick.AddListener(JoinRoom);
-		m_ReconnectButton.onClick.AddListener(ReconnectRoom);
-		m_SendMessageButton.onClick.AddListener(SendMessage);
-		m_LeaveButton.onClick.AddListener(LeaveRoom);
-		m_GetAvailableRoomsButton.onClick.AddListener(GetAvailableRooms);
-	}
-
-	async void ConnectToServer ()
-	{
-		/*
+    void ConnectToServer()
+    {
+        /*
 		 * Get Colyseus endpoint from InputField
 		 */
-		string endpoint = m_EndpointField.text;
+        string endpoint = m_EndpointField.text;
 
-		Debug.Log("Connecting to " + endpoint);
+        Debug.Log("Connecting to " + endpoint);
 
-		/*
+        /*
 		 * Connect into Colyeus Server
 		 */
-		client = ColyseusManager.Instance.CreateClient(endpoint);
+        client = ColyseusManager.Instance.CreateClient(endpoint);
+    }
 
-		//await client.Auth.Login();
+    private static Dictionary<string, object> ConnectionOptions(string methodName)
+    {
+        return new Dictionary<string, object>()
+        {
+            ["name"] = "From " + methodName,
+        };
+    }
 
-		//var friends = await client.Auth.GetFriends();
+    public async void CreateRoom()
+    {
+        await CleanUpAndLeaveRoom();
+        room = await client.Create<SquadArrangementState>(roomName, ConnectionOptions("CreateRoom"));
+        RegisterRoomHandlers();
+    }
 
-		//// Update username
-		//client.Auth.Username = "Jake";
-		//await client.Auth.Save();
-	}
+    public async void JoinOrCreateRoom()
+    {
+        await CleanUpAndLeaveRoom();
+        room = await client.JoinOrCreate<SquadArrangementState>(roomName, ConnectionOptions("JoinOrCreateRoom"));
+        RegisterRoomHandlers();
+    }
 
-	public async void CreateRoom()
-	{
-		room = await client.Create<State>(roomName, new Dictionary<string, object>() { });
+    public async void JoinRoom()
+    {
+        await CleanUpAndLeaveRoom();
+        room = await client.Join<SquadArrangementState>(roomName, ConnectionOptions("JoinRoom"));
+        RegisterRoomHandlers();
+    }
 
-		m_SessionIdText.text = "sessionId: " + room.SessionId;
+    async void ReconnectRoom()
+    {
+        string roomId = PlayerPrefs.GetString("roomId");
+        string sessionId = PlayerPrefs.GetString("sessionId");
+        if (string.IsNullOrEmpty(sessionId) || string.IsNullOrEmpty(roomId))
+        {
+            Debug.Log("Cannot Reconnect without having a roomId and sessionId");
+            return;
+        }
 
-		room.State.entities.OnAdd += OnEntityAdd;
-		room.State.entities.OnRemove += OnEntityRemove;
-		room.State.entities.OnChange += OnEntityMove;
+        room = await client.Reconnect<SquadArrangementState>(roomId, sessionId);
 
-		PlayerPrefs.SetString("roomId", room.Id);
-		PlayerPrefs.SetString("sessionId", room.SessionId);
-		PlayerPrefs.Save();
+        Debug.Log("Reconnected into room successfully.");
+        RegisterRoomHandlers();
+    }
 
-		room.OnLeave += (code) => Debug.Log("ROOM: ON LEAVE");
-		room.OnError += (message) => Debug.LogError(message);
-		room.OnStateChange += OnStateChangeHandler;
-		room.OnMessage += OnMessage;
-	}
+    public void RegisterRoomHandlers()
+    {
+        m_SessionIdText.text = "sessionId: " + room.SessionId;
 
-	public async void JoinOrCreateRoom()
-	{
-		room = await client.JoinOrCreate<State>(roomName, new Dictionary<string, object>() { });
+        room.State.members.OnAdd += OnEntityAdd;
+        room.State.members.OnRemove += OnEntityRemove;
+        room.State.members.OnChange += OnEntityMove;
+        room.State.TriggerAll();
 
-		m_SessionIdText.text = "sessionId: " + room.SessionId;
+        PlayerPrefs.SetString("roomId", room.Id);
+        PlayerPrefs.SetString("sessionId", room.SessionId);
+        PlayerPrefs.Save();
 
-		room.State.entities.OnAdd += OnEntityAdd;
-		room.State.entities.OnRemove += OnEntityRemove;
-		room.State.entities.OnChange += OnEntityMove;
+        room.OnLeave += (code) => Debug.Log("ROOM: ON LEAVE");
+        room.OnError += (code, message) => Debug.LogError("ERROR, code =>" + code + ", message => " + message);
+        room.OnStateChange += OnStateChangeHandler;
+    }
 
-		PlayerPrefs.SetString("roomId", room.Id);
-		PlayerPrefs.SetString("sessionId", room.SessionId);
-		PlayerPrefs.Save();
+    async void LeaveRoom()
+    {
+        await CleanUpAndLeaveRoom();
+    }
 
-		room.OnLeave += (code) => Debug.Log("ROOM: ON LEAVE");
-		room.OnError += (message) => Debug.LogError(message);
-		room.OnStateChange += OnStateChangeHandler;
-		room.OnMessage += OnMessage;
-	}
+    private async Task CleanUpAndLeaveRoom()
+    {
+        if (room == null)
+        {
+            return;
+        }
 
-	public async void JoinRoom ()
-	{
-		room = await client.Join<State>(roomName, new Dictionary<string, object>() {});
+        await room.Leave(false);
 
-		m_SessionIdText.text = "sessionId: " + room.SessionId;
+        // Destroy player entities
+        foreach (GameObject entry in members.Values)
+        {
+            Destroy(entry);
+        }
 
-		room.State.entities.OnAdd += OnEntityAdd;
-		room.State.entities.OnRemove += OnEntityRemove;
-		room.State.entities.OnChange += OnEntityMove;
+        members.Clear();
+    }
 
-		PlayerPrefs.SetString("roomId", room.Id);
-		PlayerPrefs.SetString("sessionId", room.SessionId);
-		PlayerPrefs.Save();
+    async void GetAvailableRooms()
+    {
+        var roomsAvailable = await client.GetAvailableRooms(roomName);
 
-		room.OnLeave += (code) => Debug.Log("ROOM: ON LEAVE");
-		room.OnError += (message) => Debug.LogError(message);
-		room.OnStateChange += OnStateChangeHandler;
-		room.OnMessage += OnMessage;
-	}
+        Debug.Log("Available rooms (" + roomsAvailable.Length + ")");
+        for (var i = 0; i < roomsAvailable.Length; i++)
+        {
+            Debug.Log("roomId: " + roomsAvailable[i].roomId);
+            Debug.Log("maxClients: " + roomsAvailable[i].maxClients);
+            Debug.Log("clients: " + roomsAvailable[i].clients);
+        }
+    }
 
-	async void ReconnectRoom ()
-	{
-		string roomId = PlayerPrefs.GetString("roomId");
-		string sessionId = PlayerPrefs.GetString("sessionId");
-		if (string.IsNullOrEmpty(sessionId) || string.IsNullOrEmpty(roomId))
-		{
-			Debug.Log("Cannot Reconnect without having a roomId and sessionId");
-			return;
-		}
+    void SendMessage()
+    {
+        if (room != null)
+        {
+            _ = room.Send("move_right", new ReadyMessage()
+            {
+                ready = true,
+            });
+        }
+        else
+        {
+            Debug.Log("Room is not connected!");
+        }
+    }
 
-		room = await client.Reconnect<State>(roomId, sessionId);
-		Debug.Log("Reconnected into room successfully.");
-		m_SessionIdText.text = "sessionId: " + room.SessionId;
+    void OnStateChangeHandler(SquadArrangementState state, bool isFirstState)
+    {
+        // Setup room first state
+        Debug.LogFormat("State has been updated! {0}", state);
+    }
 
-		room.State.entities.OnAdd += OnEntityAdd;
-		room.State.entities.OnRemove += OnEntityRemove;
-		room.State.entities.OnChange += OnEntityMove;
+    void OnEntityAdd(SquadMember entity, string key)
+    {
+        GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-		room.OnError += (message) => Debug.LogError(message);
+        cube.transform.position = new Vector3(0, 0, 0);
 
-		room.OnStateChange += OnStateChangeHandler;
-		room.OnMessage += OnMessage;
-	}
+        // add "player" to map of players
+        members.Add(entity, cube);
+    }
 
-	async void LeaveRoom()
-	{
-		await room.Leave(false);
+    void OnEntityRemove(SquadMember entity, string key)
+    {
+        if (members.TryGetValue(entity, out GameObject cube) && cube != null)
+        {
+            Destroy(cube);
+        }
 
-		// Destroy player entities
-		foreach (KeyValuePair<Entity, GameObject> entry in entities)
-		{
-			Destroy(entry.Value);
-		}
-
-		entities.Clear();
-	}
-
-	async void GetAvailableRooms()
-	{
-		var roomsAvailable = await client.GetAvailableRooms<CustomRoomAvailable>(roomName);
-
-		Debug.Log("Available rooms (" + roomsAvailable.Length + ")");
-		for (var i = 0; i < roomsAvailable.Length; i++)
-		{
-			Debug.Log("roomId: " + roomsAvailable[i].roomId);
-			Debug.Log("maxClients: " + roomsAvailable[i].maxClients);
-			Debug.Log("clients: " + roomsAvailable[i].clients);
-			Debug.Log("metadata.str: " + roomsAvailable[i].metadata.str);
-			Debug.Log("metadata.number: " + roomsAvailable[i].metadata.number);
-		}
-	}
-
-	void SendMessage()
-	{
-		if (room != null)
-		{
-			room.Send("move_right");
-
-			// Sending typed data to the server
-			room.Send(new CustomData() {
-				integer = 100,
-				str = "Hello world!"
-			});
-		}
-		else
-		{
-			Debug.Log("Room is not connected!");
-		}
-	}
-
-	void OnMessage (object msg)
-	{
-		if (msg is Message)
-		{
-			var message = (Message)msg;
-			Debug.Log("Received schema-encoded message:");
-			Debug.Log("message.num => " + message.num + ", message.str => " + message.str);
-		}
-		else
-		{
-			// msgpack-encoded message
-			var message = (IndexedDictionary<string, object>)msg;
-			Debug.Log("Received msgpack-encoded message:");
-			Debug.Log(message["hello"]);
-		}
-	}
-
-	void OnStateChangeHandler (State state, bool isFirstState)
-	{
-		// Setup room first state
-		Debug.Log("State has been updated!");
-	}
-
-	void OnEntityAdd(Entity entity, string key)
-	{
-		GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-		Debug.Log("Player add! x => " + entity.x + ", y => " + entity.y);
-
-		cube.transform.position = new Vector3(entity.x, entity.y, 0);
-
-		// add "player" to map of players
-		entities.Add(entity, cube);
-	}
-
-	void OnEntityRemove(Entity entity, string key)
-	{
-		GameObject cube;
-		entities.TryGetValue(entity, out cube);
-		Destroy(cube);
-
-		entities.Remove(entity);
-	}
+        members.Remove(entity);
+    }
 
 
-	void OnEntityMove(Entity entity, string key)
-	{
-		if (entities.TryGetValue(entity, out GameObject cube) && cube != null)
-		{
-			Debug.Log(entity);
-			cube.transform.position = new Vector3(entity.x, entity.y, 0);
-		}
-	}
+    void OnEntityMove(SquadMember entity, string key)
+    {
+        Debug.LogFormat("Member changed {0}", entity);
+    }
 
-	void OnApplicationQuit()
-	{
-	}
+    void OnApplicationQuit()
+    {
+    }
 }

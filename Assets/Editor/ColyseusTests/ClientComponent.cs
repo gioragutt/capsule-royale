@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
 using Colyseus;
+using CapsuleRoyale.Demo;
 
 public class ClientComponent : MonoBehaviour
 {

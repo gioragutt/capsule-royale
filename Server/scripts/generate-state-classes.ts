@@ -26,7 +26,7 @@ const generateCSharpClasses = ({ roomName, files }: GenerationOpts): ListrTask =
   task: () => new Listr(files.map(({ fullFilePath, shortFilePath }) => ({
     title: shortFilePath,
     task: async () => {
-      const namespace = `CapsuleRoyale.${roomName}.Schemas`;
+      const namespace = `CapsuleRoyale.${roomName}`;
       const output = path.join(csharpOutputDir, roomName)
       await execa('npx', ['schema-codegen', fullFilePath, '--csharp', '--output', output, '--namespace', namespace])
     },

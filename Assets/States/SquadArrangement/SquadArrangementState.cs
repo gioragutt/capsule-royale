@@ -7,7 +7,7 @@
 
 using Colyseus.Schema;
 
-namespace CapsuleRoyale.SquadArrangement.Schemas {
+namespace CapsuleRoyale.SquadArrangement {
 	public class SquadArrangementState : Schema {
 		[Type(0, "map", typeof(MapSchema<SquadMember>))]
 		public MapSchema<SquadMember> members = new MapSchema<SquadMember>();

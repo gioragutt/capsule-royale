@@ -7,7 +7,7 @@
 
 using Colyseus.Schema;
 
-namespace CapsuleRoyale.Demo.Schemas {
+namespace CapsuleRoyale.Demo {
 	public class Player : Entity {
 		[Type(2, "boolean")]
 		public bool connected = false;
