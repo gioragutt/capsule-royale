@@ -13,6 +13,10 @@
     "member-ordering": [false],
     "interface-name": [false],
     "arrow-parens": false,
+    "array-type": [
+      true,
+      "array-simple"
+    ],
     "object-literal-sort-keys": false,
     "trailing-comma": [
       true,

@@ -1,20 +1,29 @@
 import { Dispatcher } from '@colyseus/command';
 import { Client, Room } from 'colyseus';
-import { JoinCommand, ReadyCommand } from './squad-arrangement.commands';
-import { ReadyMessage, SquadArrangementState } from './squad-arrangement.schemas';
+import { randomId } from '../../utils';
+import { JoinCommand, LeaveCommand, MoveCommand, ReadyCommand } from './squad-arrangement.commands';
+import { Position, ReadyMessage, SquadArrangementState } from './squad-arrangement.schemas';
 
 export class SquadArrangementRoom extends Room<SquadArrangementState> {
   static readonly roomName = 'squad_arrangement';
+  readonly inviteId = randomId();
   dispatcher = new Dispatcher(this);
 
   onCreate(): void {
     this.setState(new SquadArrangementState());
 
-    this.onMessage('ready', ({ sessionId }, msg: ReadyMessage) =>
-      this.dispatcher.dispatch(new ReadyCommand(), { sessionId, msg }));
+    this.onMessage('ready', ({ sessionId }, ready: ReadyMessage) =>
+      this.dispatcher.dispatch(new ReadyCommand(), { sessionId, ready }));
+
+    this.onMessage('move', ({ sessionId }, pos: Position) =>
+      this.dispatcher.dispatch(new MoveCommand(), { sessionId, pos }))
   }
 
-  async onJoin({sessionId}: Client, options?: any): Promise<void> {
-    this.dispatcher.dispatch(new JoinCommand(), { sessionId, ...(options || {}) });
+  async onJoin(client: Client, options?: any): Promise<void> {
+    this.dispatcher.dispatch(new JoinCommand(), { client, ...(options || {}) });
+  }
+
+  onLeave(client: Client, consented?: boolean) {
+    this.dispatcher.dispatch(new LeaveCommand(), { client, consented: !!consented });
   }
 }

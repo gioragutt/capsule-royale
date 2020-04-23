@@ -15,10 +15,10 @@ const extractRoomName = (fileName: string) => {
 
 interface GenerationOpts {
   roomName: string;
-  files: {
+  files: Array<{
     shortFilePath: string;
     fullFilePath: string;
-  }[]
+  }>
 }
 
 const generateCSharpClasses = ({ roomName, files }: GenerationOpts): ListrTask => ({

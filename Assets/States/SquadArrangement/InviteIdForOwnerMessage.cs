@@ -8,17 +8,8 @@
 using Colyseus.Schema;
 
 namespace CapsuleRoyale.SquadArrangement {
-	public class SquadMember : Schema {
+	public class InviteIdForOwnerMessage : Schema {
 		[Type(0, "string")]
-		public string id = "";
-
-		[Type(1, "string")]
-		public string state = "";
-
-		[Type(2, "string")]
-		public string name = "";
-
-		[Type(3, "ref", typeof(Position))]
-		public Position pos = new Position();
+		public string inviteId = "";
 	}
 }
