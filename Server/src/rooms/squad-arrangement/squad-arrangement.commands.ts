@@ -1,12 +1,11 @@
 import { Command } from '@colyseus/command';
-import { Context, Schema, type } from '@colyseus/schema';
 import { Client } from 'colyseus';
-import { SquadArrangementState, SquadMember } from './squad-arrangement.schemas';
 import roomLogger from './logger';
+import { ReadyMessage, SquadArrangementState, SquadMember } from './squad-arrangement.schemas';
+
+const toString = (obj: any) => obj && obj.toJSON ? obj.toJSON() : obj;
 
 const log = roomLogger.extend('commands');
-
-const ctx = new Context();
 
 interface JoinOptions {
   sessionId: string;
@@ -29,15 +28,10 @@ export class JoinCommand extends Command<SquadArrangementState, JoinOptions> {
   }
 }
 
-export class ReadyMessage extends Schema {
-  @type('boolean', ctx)
-  ready!: boolean;
-}
-
 export class ReadyCommand extends Command<SquadArrangementState, { sessionId: Client['sessionId'], msg: ReadyMessage }> {
   execute({ sessionId, msg }: this['payload']): void {
     const member: SquadMember = this.state.members[sessionId];
-    log(`[Room %s] setting %s ready: %O`, this.room.roomId, member.name, msg.toJSON())
+    log(`[Room %s] setting %s ready: %O`, this.room.roomId, member.name, toString(msg))
     member.ready = msg.ready;
   }
 }

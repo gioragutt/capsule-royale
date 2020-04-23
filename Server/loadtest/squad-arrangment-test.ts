@@ -1,4 +1,4 @@
-import { Room, Client } from 'colyseus.js';
+import { Room, Client, DataChange } from 'colyseus.js';
 
 export function requestJoinOptions(this: Client, i: number) {
   return { requestNumber: i };
@@ -8,13 +8,8 @@ export function onJoin(this: Room) {
   console.log(this.sessionId, 'joined.');
 
   setTimeout(() => {
-    console.log('asdasdads', this.state.owner);
-    (this as any).send({ type: 'ready', ready: true });
+    this.send('ready', { ready: true })
   }, 5000);
-}
-
-export function onMessage(this: Room, message) {
-  console.log(this.sessionId, 'received:', message);
 }
 
 export function onLeave(this: Room) {
@@ -26,5 +21,5 @@ export function onError(this: Room, code, err) {
 }
 
 export function onStateChange(this: Room, state) {
-  console.log(this.sessionId, "new state:", state);
+  console.log(this.sessionId, 'new state:', JSON.stringify(state));
 }

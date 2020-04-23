@@ -1,6 +1,11 @@
-import { MapSchema, Schema, type, Context } from '@colyseus/schema';
+import { Context, MapSchema, Schema, type } from '@colyseus/schema';
 
 const ctx = new Context();
+
+export class ReadyMessage extends Schema {
+  @type('boolean', ctx)
+  ready!: boolean;
+}
 
 export class SquadMember extends Schema {
   @type('boolean', ctx)

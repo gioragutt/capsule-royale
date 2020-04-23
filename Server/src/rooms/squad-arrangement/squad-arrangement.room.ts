@@ -1,7 +1,7 @@
 import { Dispatcher } from '@colyseus/command';
 import { Client, Room } from 'colyseus';
-import { JoinCommand, ReadyCommand, ReadyMessage } from './squad-arrangement.commands';
-import { SquadArrangementState } from './squad-arrangement.schemas';
+import { JoinCommand, ReadyCommand } from './squad-arrangement.commands';
+import { ReadyMessage, SquadArrangementState } from './squad-arrangement.schemas';
 
 export class SquadArrangementRoom extends Room<SquadArrangementState> {
   static readonly roomName = 'squad_arrangement';
