@@ -2,7 +2,7 @@ import { Command as BaseCommand } from '@colyseus/command';
 import { Client, Room } from 'colyseus';
 import roomLogger from './logger';
 import { SquadArrangementRoom } from './squad-arrangement.room';
-import { InviteIdForOwnerMessage, Position, ReadyMessage, SquadArrangementState, SquadMember, SquadMemberState } from './squad-arrangement.schemas';
+import { Position, ReadyMessage, SquadArrangementState, SquadMember, SquadMemberState } from './squad-arrangement.schemas';
 
 abstract class Command<Opts = any> extends BaseCommand<SquadArrangementState, Opts> {
   room!: SquadArrangementRoom;
@@ -32,7 +32,6 @@ export class JoinCommand extends Command<JoinOptions> {
     if (currentSquadSize === 0) {
       log(this.room, `setting owner to %s`, member.name)
       this.state.owner = member.id;
-      client.send(InviteIdForOwnerMessage.create(this.room.inviteId))
     }
 
     this.state.members[member.id] = member;

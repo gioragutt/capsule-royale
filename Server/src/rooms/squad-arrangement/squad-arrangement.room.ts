@@ -6,10 +6,10 @@ import { Position, ReadyMessage, SquadArrangementState } from './squad-arrangeme
 
 export class SquadArrangementRoom extends Room<SquadArrangementState> {
   static readonly roomName = 'squad_arrangement';
-  readonly inviteId = randomId();
   dispatcher = new Dispatcher(this);
 
   onCreate(): void {
+    this.roomId = randomId();
     this.setState(new SquadArrangementState());
 
     this.onMessage('ready', ({ sessionId }, ready: ReadyMessage) =>

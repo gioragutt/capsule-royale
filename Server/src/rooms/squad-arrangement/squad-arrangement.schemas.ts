@@ -13,15 +13,6 @@ export class ReadyMessage extends Schema {
   ready!: boolean;
 }
 
-export class InviteIdForOwnerMessage extends Schema {
-  @type('string', ctx)
-  inviteId!: string;
-
-  static create(inviteId: string) {
-    return Object.assign(new InviteIdForOwnerMessage(), { inviteId });
-  }
-}
-
 export class Position extends Schema {
   @type('number', ctx)
   x!: number;

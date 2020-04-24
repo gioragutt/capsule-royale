@@ -5,6 +5,7 @@ export function requestJoinOptions(this: Client, i: number) {
 }
 
 export function onJoin(this: Room) {
+  console.log('ROOM ID = ', this.id);
   console.log(this.sessionId, 'joined.');
 
   setTimeout(() => {
@@ -21,5 +22,5 @@ export function onError(this: Room, code, err) {
 }
 
 export function onStateChange(this: Room, state) {
-  console.log(this.sessionId, 'new state:', JSON.stringify(state));
+  // console.log(this.sessionId, 'new state:', JSON.stringify(state));
 }
