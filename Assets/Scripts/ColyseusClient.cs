@@ -22,15 +22,8 @@ public class ColyseusClient : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    private void Start()
+    public void ConnectToServer(string endpoint)
     {
-        ConnectToServer();
-    }
-
-    public void ConnectToServer()
-    {
-        string endpoint = "ws://localhost:2567";
-
         Debug.Log("Connecting to " + endpoint);
 
         Client = ColyseusManager.Instance.CreateClient(endpoint);
