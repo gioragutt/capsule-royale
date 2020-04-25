@@ -6,6 +6,11 @@ import { Position, ReadyMessage, SquadArrangementState, SquadMember, SquadMember
 
 abstract class Command<Opts = any> extends BaseCommand<SquadArrangementState, Opts> {
   room!: SquadArrangementRoom;
+
+  protected updateReadyState() {
+    this.state.readyToStart = Object.values(this.state.members)
+      .every((m: SquadMember) => m.state === SquadMemberState.READY);
+  }
 }
 
 const toString = (obj: any) => obj && obj.toJSON ? obj.toJSON() : obj;
@@ -36,6 +41,8 @@ export class JoinCommand extends Command<JoinOptions> {
 
     this.state.members[member.id] = member;
     log(this.room, `%s joined: %O`, member.name, member.toJSON());
+
+    this.updateReadyState();
   }
 }
 
@@ -44,8 +51,7 @@ export class ReadyCommand extends Command<{ sessionId: Client['sessionId'], read
     const member: SquadMember = this.state.members[sessionId];
     log(this.room, `setting %s ready: %O`, member.name, toString(ready))
     member.state = ready.ready ? SquadMemberState.READY : SquadMemberState.NOT_READY;
-    this.state.readyToStart = Object.values(this.state.members)
-      .every((m: SquadMember) => m.state === SquadMemberState.READY);
+    this.updateReadyState();
   }
 }
 
