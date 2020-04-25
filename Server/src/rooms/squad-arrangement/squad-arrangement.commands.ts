@@ -64,13 +64,15 @@ export class MoveCommand extends Command<{ sessionId: Client['sessionId'], pos: 
 }
 
 export class LeaveCommand extends Command<{ client: Client, consented: boolean }> {
-  validate({ consented }: this['payload']): boolean {
-    return !consented;
-  }
-
-  async execute({ client }: this['payload']): Promise<void> {
+  async execute({ client, consented }: this['payload']): Promise<void> {
     const member: SquadMember = this.state.members[client.sessionId];
     member.state = SquadMemberState.DISCONNECTED;
+
+    if (consented) {
+      log(this.room, `${member.id}(${member.name}) left the room (consented)`)
+      delete this.state.members[client.sessionId];
+      return;
+    }
 
     try {
       log(this.room, `${member.id}(${member.name}) disconnected, allowing reconnection`)
