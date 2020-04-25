@@ -10,6 +10,23 @@ public class ColyseusClient : MonoBehaviour
     public static ColyseusClient Instance { get; private set; }
     public Client Client { get; private set; }
 
+    public string Endpoint
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(PlayerPrefs.GetString("serverEndpoint")))
+            {
+                PlayerPrefs.SetString("serverEndpoint", "ws://localhost:2567");
+            }
+
+            return PlayerPrefs.GetString("serverEndpoint");
+        }
+        set
+        {
+            PlayerPrefs.SetString("serverEndpoint", value);
+        }
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -20,6 +37,11 @@ public class ColyseusClient : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+    }
+
+    private void Start()
+    {
+        ConnectToServer(Endpoint);
     }
 
     public void ConnectToServer(string endpoint)

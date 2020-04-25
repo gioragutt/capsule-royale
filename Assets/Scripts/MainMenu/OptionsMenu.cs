@@ -13,17 +13,10 @@ public class OptionsMenu : MonoBehaviour
 
     private string initialEndpoint;
 
-    // Start is called before the first frame update
     void Start()
     {
-        if (string.IsNullOrWhiteSpace(PlayerPrefs.GetString("serverEndpoint")))
-        {
-            PlayerPrefs.SetString("serverEndpoint", "ws://localhost:2567");
-        }
-
-        initialEndpoint = PlayerPrefs.GetString("serverEndpoint");
+        initialEndpoint = ColyseusClient.Instance.Endpoint;
         endpointInput.text = initialEndpoint;
-        ColyseusClient.Instance.ConnectToServer(initialEndpoint);
     }
 
     public void Cancel()
@@ -46,7 +39,7 @@ public class OptionsMenu : MonoBehaviour
             return;
         }
 
-        PlayerPrefs.SetString("serverEndpoint", newEndpoint);
+        ColyseusClient.Instance.Endpoint = newEndpoint;
         try
         {
             ColyseusClient.Instance.ConnectToServer(newEndpoint);
