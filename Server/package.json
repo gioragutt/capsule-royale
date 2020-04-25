@@ -12,7 +12,8 @@
     "loadtest": "colyseus-loadtest loadtest/example.ts --room demo --numClients 2",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "lint:fix": "npm run lint -- --fix",
-    "generate-state-classes": "ts-node scripts/generate-state-classes.ts"
+    "generate-state-classes": "ts-node scripts/generate-state-classes.ts",
+    "generate-state-classes:debug": "node -r ts-node/register --inspect-brk scripts/generate-state-classes.ts"
   },
   "devDependencies": {
     "@colyseus/loadtest": "^0.13.0",
