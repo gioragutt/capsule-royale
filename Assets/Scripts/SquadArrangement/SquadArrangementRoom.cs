@@ -77,6 +77,11 @@ public class SquadArrangementRoom : MonoBehaviour
 
     public async void Leave()
     {
+        await LeaveAndCleaupRoom();
+    }
+
+    private async Task LeaveAndCleaupRoom()
+    {
         if (room == null)
         {
             return;
@@ -95,6 +100,14 @@ public class SquadArrangementRoom : MonoBehaviour
         room.State.members.OnChange += OnMemberMove;
         room.State.OnChange += OnRoomStateChanged;
         room.State.TriggerAll();
+
+        room.OnMessage(async (GameStartedMessage msg) =>
+        {
+            Debug.Log($"Game started, moving to {msg.roomId}");
+            var room = await ColyseusClient.Instance.JoinRoom<BattleRoyaleMatchmakingState>(msg.roomId);
+            await LeaveAndCleaupRoom();
+            // Move to other room
+        });
     }
 
     private void OnRoomStateChanged(List<Colyseus.Schema.DataChange> changes)

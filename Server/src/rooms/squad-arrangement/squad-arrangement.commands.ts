@@ -1,8 +1,9 @@
 import { Command as BaseCommand } from '@colyseus/command';
-import { Client, Room } from 'colyseus';
+import { Client, matchMaker, Room } from 'colyseus';
+import { BattleRoyaleMatchmakingRoom } from '../battle-royale-matchmaking/battle-royale-matchmaking.room';
 import roomLogger from './logger';
 import { SquadArrangementRoom } from './squad-arrangement.room';
-import { Position, ReadyMessage, SquadArrangementState, SquadMember, SquadMemberState } from './squad-arrangement.schemas';
+import { Position, ReadyMessage, SquadArrangementState, SquadMember, SquadMemberState, GameStartedMessage } from './squad-arrangement.schemas';
 
 abstract class Command<Opts = any> extends BaseCommand<SquadArrangementState, Opts> {
   room!: SquadArrangementRoom;
@@ -87,7 +88,7 @@ export class LeaveCommand extends Command<{ client: Client, consented: boolean }
 }
 
 export class StartGameCommand extends Command<{ sessionId: Client['sessionId'] }> {
-  execute({ sessionId }: this['payload']): void {
+  async execute({ sessionId }: this['payload']): Promise<void> {
     if (this.state.started) {
       console.log('Game already started');
       return;
@@ -99,9 +100,12 @@ export class StartGameCommand extends Command<{ sessionId: Client['sessionId'] }
 
     this.state.started = true;
 
-    // Start new game
     console.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
     console.log('                  STARTING THE GAME                  ');
     console.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
+
+    const reservation = await matchMaker.joinOrCreate(BattleRoyaleMatchmakingRoom.roomName);
+
+    this.room.broadcast(GameStartedMessage.create(reservation.room.roomId), {});
   }
 }
