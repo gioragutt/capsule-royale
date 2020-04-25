@@ -22,7 +22,7 @@ export class SquadArrangementRoom extends Room<SquadArrangementState> {
       this.dispatcher.dispatch(new StartGameCommand(), { sessionId }))
   }
 
-  async onJoin(client: Client, options: any = {}): Promise<void> {
+  onJoin(client: Client, options: any = {}): void {
     this.dispatcher.dispatch(new JoinCommand(), { client, ...options });
   }
 

@@ -470,6 +470,12 @@ MonoBehaviour:
   notReadyColor: {r: 0, g: 0.55940914, b: 1, a: 0}
   readyColor: {r: 0, g: 1, b: 0.06529045, a: 0}
   inviteIdText: {fileID: 0}
+  onReadyToStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onNotReadyToStart:
+    m_PersistentCalls:
+      m_Calls: []
   playerController: {fileID: 168934328}
   playerPrefab: {fileID: 1092084580864870, guid: bc40515fbab3e4bd98b63470db95e9f0,
     type: 3}
@@ -486,9 +492,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7abb602c532da4b2980d8967d27ecfc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  room: {fileID: 168934327}
-  player: {fileID: 0}
-  speed: 10
 --- !u!114 &168934329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2440,7 +2443,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1747015256}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1115823017}
+        m_MethodName: PlaySolo
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1747015256
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -4,11 +4,15 @@ using System.Threading.Tasks;
 using Colyseus;
 using Colyseus.Schema;
 using UnityEngine;
+using CapsuleRoyale.SquadArrangement;
+using System;
 
 public class ColyseusClient : MonoBehaviour
 {
     public static ColyseusClient Instance { get; private set; }
     public Client Client { get; private set; }
+
+    private object savedRoomInstance;
 
     public string Endpoint
     {
@@ -99,5 +103,17 @@ public class ColyseusClient : MonoBehaviour
         PlayerPrefs.SetString("sessionId", room.SessionId);
         PlayerPrefs.Save();
         return room;
+    }
+
+    public void StoreRoom<T>(Room<T> room)
+    {
+        savedRoomInstance = room;
+    }
+
+    public Room<T> RetrieveRoom<T>()
+    {
+        Room<T> toReturn = (Room<T>)savedRoomInstance;
+        savedRoomInstance = null;
+        return toReturn;
     }
 }

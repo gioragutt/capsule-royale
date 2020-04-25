@@ -1,9 +1,9 @@
 import { Command as BaseCommand } from '@colyseus/command';
 import { Client, matchMaker, Room } from 'colyseus';
-import { BattleRoyaleMatchmakingRoom } from '../battle-royale-matchmaking/battle-royale-matchmaking.room';
+import { BattleRoyaleMatchmakingRoom, SquadMemberSavedSettings } from '../battle-royale-matchmaking';
 import roomLogger from './logger';
 import { SquadArrangementRoom } from './squad-arrangement.room';
-import { Position, ReadyMessage, SquadArrangementState, SquadMember, SquadMemberState, GameStartedMessage } from './squad-arrangement.schemas';
+import { Position, ReadyMessage, SquadArrangementState, SquadMember, SquadMemberState } from './squad-arrangement.schemas';
 
 abstract class Command<Opts = any> extends BaseCommand<SquadArrangementState, Opts> {
   room!: SquadArrangementRoom;
@@ -100,12 +100,21 @@ export class StartGameCommand extends Command<{ sessionId: Client['sessionId'] }
 
     this.state.started = true;
 
-    console.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
-    console.log('                  STARTING THE GAME                  ');
-    console.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
+    await this.sendReservations();
+  }
 
-    const reservation = await matchMaker.joinOrCreate(BattleRoyaleMatchmakingRoom.roomName);
+  private async sendReservations() {
+    const room =
+      await matchMaker.findOneRoomAvailable(BattleRoyaleMatchmakingRoom.roomName, {}) ||
+      await matchMaker.createRoom(BattleRoyaleMatchmakingRoom.roomName, {});
 
-    this.room.broadcast(GameStartedMessage.create(reservation.room.roomId), {});
+    for (const client of this.room.clients) {
+      const member: SquadMember = this.state.members[client.sessionId];
+      const reservation = await matchMaker.reserveSeatFor(room, {
+        name: member.name,
+      } as SquadMemberSavedSettings);
+      log(this.room, 'sending reservation to %s: %O', client.sessionId, reservation);
+      client.send('battle-royale-matchmaking-reservation', reservation);
+    }
   }
 }

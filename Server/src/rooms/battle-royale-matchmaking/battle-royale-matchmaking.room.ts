@@ -1,17 +1,27 @@
 import { Dispatcher } from '@colyseus/command';
-import { Room, Client } from 'colyseus';
-import { BattleRoyaleMatchmakingState } from './battle-royale-matchmaking.schemas';
+import { Client, Room } from 'colyseus';
+import { JoinCommand, MoveCommand, LeaveCommand } from './battle-royale-matchmaking.commands';
+import { BattleRoyaleMatchmakingState, Position } from './battle-royale-matchmaking.schemas';
+import { SquadMemberSavedSettings } from './interfaces';
 
 export class BattleRoyaleMatchmakingRoom extends Room<BattleRoyaleMatchmakingState> {
   static readonly roomName = 'battle_royale_matchmaking';
   private dispatcher = new Dispatcher(this);
 
-  onCreate(options?: any): void {
-    console.log('CREATED BATTLE ROYALE ROOM - ', JSON.stringify(options));
+  onCreate(): void {
+    this.maxClients = 100; // Default is Integer.INFINITY, this crashes client
     this.setState(new BattleRoyaleMatchmakingState());
+
+
+    this.onMessage('move', ({ sessionId }, pos: Position) =>
+      this.dispatcher.dispatch(new MoveCommand(), { sessionId, pos }))
   }
 
-  onJoin?(client: Client, options?: any, auth?: any): void | Promise<any> {
-    console.log(client.sessionId, 'joined');
+  onJoin(client: Client, previousData: SquadMemberSavedSettings): void {
+    this.dispatcher.dispatch(new JoinCommand(), { client, previousData });
+  }
+
+  onLeave(client: Client, consented?: boolean) {
+    this.dispatcher.dispatch(new LeaveCommand(), { client, consented: !!consented });
   }
 }

@@ -8,15 +8,6 @@ export const enum SquadMemberState {
   DISCONNECTED = 'DISCONNECTED',
 }
 
-export class GameStartedMessage extends Schema {
-  @type('string', ctx)
-  roomId!: string;
-
-  static create(roomId: string) {
-    return Object.assign(new GameStartedMessage(), { roomId });
-  }
-}
-
 export class ReadyMessage extends Schema {
   @type('boolean', ctx)
   ready!: boolean;

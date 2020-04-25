@@ -11,14 +11,5 @@ namespace CapsuleRoyale.BattleRoyaleMatchmaking {
 	public class BattleRoyaleMatchmakingState : Schema {
 		[Type(0, "map", typeof(MapSchema<Player>))]
 		public MapSchema<Player> players = new MapSchema<Player>();
-
-		[Type(1, "string")]
-		public string owner = "";
-
-		[Type(2, "boolean")]
-		public bool readyToStart = false;
-
-		[Type(3, "boolean")]
-		public bool started = false;
 	}
 }

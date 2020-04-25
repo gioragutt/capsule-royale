@@ -26,18 +26,13 @@ export class Player extends Schema {
 
   @type(Position, ctx)
   pos!: Position;
+
+  static create({ id, name, pos }: Partial<Player>) {
+    return Object.assign(new Player(), { id, name, pos });
+  }
 }
 
 export class BattleRoyaleMatchmakingState extends Schema {
   @type({ map: Player }, ctx)
   players = new MapSchema<Player>();
-
-  @type('string', ctx)
-  owner!: string;
-
-  @type('boolean', ctx)
-  readyToStart!: boolean;
-
-  @type('boolean', ctx)
-  started: boolean = false;
 }

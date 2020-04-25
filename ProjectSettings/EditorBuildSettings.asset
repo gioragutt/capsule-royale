@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SquadArrangement.unity
     guid: 01e35f9c89cc34cc295303051f2d971c
+  - enabled: 1
+    path: Assets/Scenes/BattleRoyaleMatchmaking.unity
+    guid: d3e8ed6ab65774c869641f42a60438e5
   m_configObjects: {}

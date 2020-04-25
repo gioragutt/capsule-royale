@@ -2,13 +2,15 @@
 
 public class PlayerController : MonoBehaviour
 {
-    public SquadArrangementRoom room;
-
     [HideInInspector]
     public Rigidbody2D player;
 
     public float speed = 10;
     private Vector2 movement = Vector2.zero;
+
+    public delegate void OnPlayerMoveDelegate(Vector3 pos);
+
+    public OnPlayerMoveDelegate OnPlayerMove;
 
     void Update()
     {
@@ -21,7 +23,7 @@ public class PlayerController : MonoBehaviour
         if (player != null && movement.magnitude != 0)
         {
             player.MovePosition(player.position + movement * speed * Time.fixedDeltaTime);
-            room.MovePlayer(player.position);
+            OnPlayerMove?.Invoke(player.position);
         }
     }
 }

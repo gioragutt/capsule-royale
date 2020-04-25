@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CapsuleRoyale.SquadArrangement;
 using Cinemachine;
@@ -8,7 +7,10 @@ using GameDevWare.Serialization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+
+using BattleRoyaleMatchmakingState = CapsuleRoyale.BattleRoyaleMatchmaking.BattleRoyaleMatchmakingState;
 
 public class SquadArrangementRoom : MonoBehaviour
 {
@@ -101,12 +103,13 @@ public class SquadArrangementRoom : MonoBehaviour
         room.State.OnChange += OnRoomStateChanged;
         room.State.TriggerAll();
 
-        room.OnMessage(async (GameStartedMessage msg) =>
+        room.OnMessage("battle-royale-matchmaking-reservation", async (MatchMakeResponse reservation) =>
         {
-            Debug.Log($"Game started, moving to {msg.roomId}");
-            var room = await ColyseusClient.Instance.JoinRoom<BattleRoyaleMatchmakingState>(msg.roomId);
+            Debug.Log($"Game started, moving to {reservation}");
+            var room = await ColyseusClient.Instance.Client.ConsumeSeatReservation<BattleRoyaleMatchmakingState>(reservation);
             await LeaveAndCleaupRoom();
-            // Move to other room
+            ColyseusClient.Instance.StoreRoom(room);
+            SceneManager.LoadScene("BattleRoyaleMatchmaking");
         });
     }
 
@@ -159,7 +162,7 @@ public class SquadArrangementRoom : MonoBehaviour
         room.State.members.OnChange -= OnMemberMove;
     }
 
-    public void MovePlayer(Vector3 newPosition)
+    void MovePlayer(Vector3 newPosition)
     {
         _ = room?.Send("move", new Position
         {
@@ -213,6 +216,7 @@ public class SquadArrangementRoom : MonoBehaviour
         {
             playerController.player = playerGameObject.GetComponent<Rigidbody2D>();
             playerController.enabled = true;
+            playerController.OnPlayerMove += MovePlayer;
             cam.Follow = playerGameObject.transform;
         }
         else
@@ -250,6 +254,7 @@ public class SquadArrangementRoom : MonoBehaviour
         }
 
         memberObjects.Remove(squadMember.id);
+        members.Remove(squadMember.id);
     }
 
     void OnMemberMove(SquadMember squadMember, string key)
