@@ -14,5 +14,11 @@ namespace CapsuleRoyale.SquadArrangement {
 
 		[Type(1, "string")]
 		public string owner = "";
+
+		[Type(2, "boolean")]
+		public bool readyToStart = false;
+
+		[Type(3, "boolean")]
+		public bool started = false;
 	}
 }

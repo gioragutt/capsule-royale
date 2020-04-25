@@ -44,6 +44,8 @@ export class ReadyCommand extends Command<{ sessionId: Client['sessionId'], read
     const member: SquadMember = this.state.members[sessionId];
     log(this.room, `setting %s ready: %O`, member.name, toString(ready))
     member.state = ready.ready ? SquadMemberState.READY : SquadMemberState.NOT_READY;
+    this.state.readyToStart = Object.values(this.state.members)
+      .every((m: SquadMember) => m.state === SquadMemberState.READY);
   }
 }
 
@@ -56,7 +58,7 @@ export class MoveCommand extends Command<{ sessionId: Client['sessionId'], pos: 
 }
 
 export class LeaveCommand extends Command<{ client: Client, consented: boolean }> {
-  validate({consented}: this['payload']): boolean {
+  validate({ consented }: this['payload']): boolean {
     return !consented;
   }
 
@@ -73,5 +75,25 @@ export class LeaveCommand extends Command<{ client: Client, consented: boolean }
       log(this.room, `${member.id}(${member.name}) left the room`)
       delete this.state.members[client.sessionId];
     }
+  }
+}
+
+export class StartGameCommand extends Command<{ sessionId: Client['sessionId'] }> {
+  execute({ sessionId }: this['payload']): void {
+    if (this.state.started) {
+      console.log('Game already started');
+      return;
+    }
+
+    if (sessionId !== this.state.owner || !this.state.readyToStart) {
+      return;
+    }
+
+    this.state.started = true;
+
+    // Start new game
+    console.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
+    console.log('                  STARTING THE GAME                  ');
+    console.log('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
   }
 }

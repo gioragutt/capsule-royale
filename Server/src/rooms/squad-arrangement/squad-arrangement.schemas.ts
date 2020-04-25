@@ -49,4 +49,10 @@ export class SquadArrangementState extends Schema {
 
   @type('string', ctx)
   owner!: string;
+
+  @type('boolean', ctx)
+  readyToStart!: boolean;
+
+  @type('boolean', ctx)
+  started: boolean = false;
 }

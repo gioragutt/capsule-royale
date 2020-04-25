@@ -1,7 +1,7 @@
 import { Dispatcher } from '@colyseus/command';
 import { Client, Room } from 'colyseus';
 import { randomId } from '../../utils';
-import { JoinCommand, LeaveCommand, MoveCommand, ReadyCommand } from './squad-arrangement.commands';
+import { JoinCommand, LeaveCommand, MoveCommand, ReadyCommand, StartGameCommand } from './squad-arrangement.commands';
 import { Position, ReadyMessage, SquadArrangementState } from './squad-arrangement.schemas';
 
 export class SquadArrangementRoom extends Room<SquadArrangementState> {
@@ -17,10 +17,13 @@ export class SquadArrangementRoom extends Room<SquadArrangementState> {
 
     this.onMessage('move', ({ sessionId }, pos: Position) =>
       this.dispatcher.dispatch(new MoveCommand(), { sessionId, pos }))
+
+    this.onMessage('start', ({ sessionId }) =>
+      this.dispatcher.dispatch(new StartGameCommand(), { sessionId }))
   }
 
-  async onJoin(client: Client, options?: any): Promise<void> {
-    this.dispatcher.dispatch(new JoinCommand(), { client, ...(options || {}) });
+  async onJoin(client: Client, options: any = {}): Promise<void> {
+    this.dispatcher.dispatch(new JoinCommand(), { client, ...options });
   }
 
   onLeave(client: Client, consented?: boolean) {

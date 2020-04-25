@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CapsuleRoyale.SquadArrangement;
 using Cinemachine;
@@ -6,6 +7,7 @@ using Colyseus;
 using GameDevWare.Serialization;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 public class SquadArrangementRoom : MonoBehaviour
@@ -23,6 +25,9 @@ public class SquadArrangementRoom : MonoBehaviour
     protected IndexedDictionary<string, GameObject> memberObjects =
         new IndexedDictionary<string, GameObject>();
 
+    public UnityEvent onReadyToStart;
+    public UnityEvent onNotReadyToStart;
+
     public PlayerController playerController;
     public GameObject playerPrefab;
     public CinemachineVirtualCamera cam;
@@ -30,6 +35,7 @@ public class SquadArrangementRoom : MonoBehaviour
     private Room<SquadArrangementState> room;
 
     private SquadMember Me => members[room.SessionId];
+    private bool ImOwner => room.SessionId == room.State.owner;
 
     private Color? StateToColor(string state)
     {
@@ -87,7 +93,39 @@ public class SquadArrangementRoom : MonoBehaviour
         room.State.members.OnAdd += OnMemberAdd;
         room.State.members.OnRemove += OnMemberRemove;
         room.State.members.OnChange += OnMemberMove;
+        room.State.OnChange += OnRoomStateChanged;
         room.State.TriggerAll();
+    }
+
+    private void OnRoomStateChanged(List<Colyseus.Schema.DataChange> changes)
+    {
+        changes.ForEach((Colyseus.Schema.DataChange change) =>
+        {
+            Debug.LogFormat("Change to room field={0} value={1} previousValue={2}",
+                change.Field, change.Value, change.PreviousValue);
+
+            switch (change.Field)
+            {
+                case "readyToStart": ChangeReadyToStart(change.Value as bool? ?? false); break;
+            }
+        });
+    }
+
+    private void ChangeReadyToStart(bool ready)
+    {
+        if (!ImOwner)
+        {
+            return;
+        }
+
+        if (ready)
+        {
+            onReadyToStart.Invoke();
+        }
+        else
+        {
+            onNotReadyToStart.Invoke();
+        }
     }
 
     private void CleanUp()
@@ -115,6 +153,17 @@ public class SquadArrangementRoom : MonoBehaviour
             x = newPosition.x,
             y = newPosition.y
         });
+    }
+
+    public async void StartGame()
+    {
+        if (room == null)
+        {
+            Debug.Log("Room is not connected!");
+            return;
+        }
+
+        await room.Send("start");
     }
 
     public async Task<bool> SendReadyMessage()
