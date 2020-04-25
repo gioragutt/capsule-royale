@@ -153,6 +153,10 @@ public class SquadArrangementRoom : MonoBehaviour
             playerController.enabled = true;
             cam.Follow = playerGameObject.transform;
         }
+        else
+        {
+            Destroy(playerGameObject.GetComponent<Rigidbody2D>());
+        }
 
         squadMember.OnDataChange((Colyseus.Schema.DataChange change) =>
         {
