@@ -28,7 +28,7 @@ export class Player extends Schema {
   pos!: Position;
 }
 
-export class BattleRoyaleState extends Schema {
+export class BattleRoyaleMatchmakingState extends Schema {
   @type({ map: Player }, ctx)
   players = new MapSchema<Player>();
 
